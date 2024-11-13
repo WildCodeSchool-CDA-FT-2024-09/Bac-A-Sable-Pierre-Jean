@@ -1,4 +1,3 @@
-// import { Link } from "react-router-dom";
 import "./repoCard.css"
 import { Link } from "react-router-dom";
 import type { Repo } from "../types/RepoTypes";

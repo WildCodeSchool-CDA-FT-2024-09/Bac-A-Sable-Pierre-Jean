@@ -7,7 +7,7 @@ export default class LangResolver {
   @Query(() => [Lang])
   async allLangs() {
     const lang = await Lang.find();
-    console.log("coucou de lang", lang);
+    // console.log("coucou de lang", lang);
     return lang;
   }
 }

@@ -1,4 +1,4 @@
-import { Arg, Field, InputType, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Authorized, Field, InputType, Mutation, Query, Resolver } from "type-graphql";
 import { Repo } from "./repos.entities";
 import { Status } from "../status/status.entities";
 // import { Lang } from "../langs/lang.entities";
@@ -20,7 +20,6 @@ class RepoInput implements Partial<Repo> {
 
 @Resolver(Repo)
 export default class RepoResolver {
-  // Methode Get pour tout les repos
   @Query(() => [Repo])
   async allRepos(@Arg("filter", { nullable: true }) filter: number) {
     if (filter) {
@@ -39,10 +38,30 @@ export default class RepoResolver {
         langs: true,
       },
     });
-    // console.log(repos);
     return repos;
   }
+  @Query(() => Repo, { nullable: true })
+  async repoById(@Arg("id") id: string): Promise<Repo | null> {
+    try {
+      const repo = await Repo.findOne({
+        where: { id },
+        relations: {
+          status: true,
+          langs: true,
+        },
+      });
+      if (!repo) {
+        console.log(`Repo avec l'id ${id} non trouvé.`);
+        return null;
+      }
+      return repo;
+    } catch (error) {
+      console.error("Erreur lors de la récupération du repo :", error);
+      throw error;
+    }
+  }
 
+  @Authorized("admin")
   @Mutation(() => Repo) //ici typage de la donnée entrante
   // @Arg : typage de la donnée sortante
   async createNewRepo(@Arg("data") newRepo: RepoInput) {
@@ -65,7 +84,7 @@ export default class RepoResolver {
     // repo.langs = langs;
 
     await repo.save();
-    console.log("repo", repo);
+    // console.log("repo", repo);
     const myRepo = await Repo.findOneOrFail({
       where: { id: newRepo.id },
       relations: {
@@ -73,7 +92,20 @@ export default class RepoResolver {
         status: true,
       },
     });
-    console.log("myRepo", myRepo);
+    // console.log("myRepo", myRepo);
     return myRepo;
+  }
+  @Mutation(() => Repo)
+  async UpdateRepoFavorite(
+    @Arg("id") id: string,
+    @Arg("isFavorite") isFavorite: boolean
+  ): Promise<Repo | null> {
+    const repo = await Repo.findOne({ where: { id } });
+    if (!repo) throw new Error("Repo not found");
+
+    repo.isFavorite = isFavorite;
+    await repo.save();
+
+    return repo;
   }
 }

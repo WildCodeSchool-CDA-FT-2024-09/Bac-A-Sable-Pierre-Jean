@@ -1,61 +1,67 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Repo } from "../types/RepoTypes";
-import connexion from "../service/connexion";
+import { useApolloClient, useQuery } from "@apollo/client";
+import "./DetailPage.css";
+import { Lang } from "../types/LangTypes";
+import { REPO_BY_ID } from "../schema/query";
+import { UPDATE_REPO_FAVORITE } from "../schema/mutations";
 
 export default function DetailPage() {
   const { id } = useParams();
-  const [data, setData] = useState<Repo> ;
+  const client = useApolloClient();
+
+  const { loading, error, data } = useQuery(REPO_BY_ID, {
+    variables: { repoByIdId: id },
+  });
 
   const handleLike = async () => {
+    if (!data) return;
     try {
-      await connexion.patch(`/api/repos/${id}`, {
-        isFavorite: !data.isFavorite,
+      const { data: updatedRepo } = await client.mutate({
+        mutation: UPDATE_REPO_FAVORITE,
+        variables: {
+          id: data.repoById.id,
+          isFavorite: !data.repoById.isFavorite,
+        },
+        update: (cache, { data: { updateRepo } }) => {
+          cache.writeQuery({
+            query: REPO_BY_ID,
+            variables: { repoByIdId: data.repoById.id },
+            data: {
+              repoById: {
+                ...data.repoById,
+                isFavorite: updateRepo.isFavorite,
+              },
+            },
+          });
+        },
       });
-      // const newRepos = { ...data } as Repo;
-      // newRepos.isFavorite = !data?.isFavorite;
-      // setData(newRepos);
-      setData({ ...data, isFavorite: !data.isFavorite });
+      console.log(
+        "Updated favorite status:",
+        updatedRepo.updateRepo.isFavorite
+      );
     } catch (error) {
       console.error(error);
     }
   };
 
-  <div>DetailPage {id}</div>;
-  useEffect(() => {
-    const fetchRepos = async () => {
-      try {
-        const repos = await connexion.get(`/api/repos/${id}`);
-        setData(repos.data[0]);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchRepos();
-  }, [id]);
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
 
   return (
     <>
       {data && (
-        <div>
-          <h1>{data.name}</h1>
+        <section className="detailCard">
+          <h1 className="detailTitle">{data.repoById.name}</h1>
+          <ul>
+            {data.repoById.langs.map((lang: Lang) => (
+              <li key={lang.id}>{lang.label}</li>
+            ))}{" "}
+          </ul>
           <button type="button" onClick={handleLike}>
-            {data.isFavorite ? "DisLike 🩶" : "Like ❤️‍🔥"}
+            {data.repoById.isFavorite ? "DisLike 🩶" : "Like ❤️‍🔥"}
           </button>
-        </div>
+        </section>
       )}
     </>
   );
 }
-
-// /**
-//  * Initialisation
-//  * data = {} ou undefined
-//  *
-//  * Après le useEffect
-//  * data = {
-//  *    pers: {
-//  *      firstname: "Bob"
-//  *    }
-//  * }
-//  */

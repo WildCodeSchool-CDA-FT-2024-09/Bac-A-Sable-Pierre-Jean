@@ -36,7 +36,7 @@ import langs_by_repo from "../data/lang_by_repo.json";
         return await lang.save();
       })
     );
-    console.log(savedlangs);
+    // console.log(savedlangs);
 
     const savedstatus = await Promise.all(
       status.map(async (sta) => {
@@ -62,11 +62,11 @@ import langs_by_repo from "../data/lang_by_repo.json";
         repo.status = savedstatus[0];
 
         const mylangs = savedlangs.filter((svlg) => {
-          console.log("repoId", rep.id);
+          // console.log("repoId", rep.id);
           const associatedlang = langs_by_repo.filter(
             (lgbyrepo) => lgbyrepo.repo_id === rep.id
           );
-          console.log("A", associatedlang);
+          // console.log("A", associatedlang);
           const langLabel = langs.filter((lg) =>
             associatedlang.some((assolg) => assolg.lang_id === lg.id)
           );

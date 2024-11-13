@@ -1,11 +1,11 @@
+import * as dotenv from "dotenv";
 import "reflect-metadata";
 import { ApolloServer } from "@apollo/server"; // preserve-line
 import { startStandaloneServer } from "@apollo/server/standalone"; // preserve-line
-import { buildSchema } from "type-graphql";
-import RepoResolver from "./repos/repo.resolver";
-import StatusResolver from "./status/status.resolver";
 import { AppDataSource } from "./data-source";
-import LangResolver from "./langs/lang.resolver";
+import setCookie from "set-cookie-parser";
+import * as jwt from "jsonwebtoken";
+import getSchema from "./schema";
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -60,19 +60,41 @@ import LangResolver from "./langs/lang.resolver";
 //  1. creates an Express app
 //  2. installs your ApolloServer instance as middleware
 //  3. prepares your app to handle incoming requests
+dotenv.config();
+const { AUTH_SECRET_KEY, PORT } = process.env;
+
 (async () => {
   await AppDataSource.initialize();
-  const schema = await buildSchema({
-    resolvers: [RepoResolver, StatusResolver, LangResolver],
-  });
+  const schema = await getSchema();
 
   const server = new ApolloServer({
     schema,
   });
 
   const { url } = await startStandaloneServer(server, {
-    listen: { port: 4000 },
+    listen: { host: "0.0.0.0", port: Number(PORT) },
+    context: async ({ req, res }) => {
+      if (!req.headers.cookie) return { res };
+
+      const { cdatokenexample } = setCookie.parse(
+        req.headers.cookie as string,
+        {
+          map: true,
+        }
+      );
+
+      if (!cdatokenexample) return { res };
+
+      const payload = jwt.verify(
+        cdatokenexample.value,
+        AUTH_SECRET_KEY as string
+      );
+
+      if (!payload) return { res };
+      return { res, cookie: payload };
+    },
   });
 
+  console.info("Docker compose is watching");
   console.log(`🚀  Server ready at: ${url}`);
 })();

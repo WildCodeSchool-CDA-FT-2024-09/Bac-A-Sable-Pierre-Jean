@@ -19,11 +19,6 @@ const router = createBrowserRouter([
       {
         path: "/detail/:id",
         element: <DetailPage />,
-        // loader: async ({ params }) => {
-        //   const repos = await connexion.get(`/api/repos/${params.id}`);
-        //   console.log("Loader", repos);
-        //   return repos.data;
-        // },
       },
     ],
   },

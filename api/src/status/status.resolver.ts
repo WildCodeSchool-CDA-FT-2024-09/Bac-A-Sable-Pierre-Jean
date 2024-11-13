@@ -7,7 +7,7 @@ export default class StatusResolver {
   @Query(() => [Status])
   async allStatus() {
     const status = await Status.find();
-    console.log(status);
+    // console.log(status);
     return status;
   }
 }

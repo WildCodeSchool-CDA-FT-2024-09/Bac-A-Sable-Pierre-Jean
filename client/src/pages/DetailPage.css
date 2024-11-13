@@ -1,0 +1,23 @@
+.detailCard {
+  border: 5px solid gold;
+  background-image: linear-gradient(
+    to top,
+    transparent 6%,
+    rgba(247, 223, 9, 0.5) 45%,
+    rgba(247, 96, 9, 0.5) 65%,
+    rgb(244, 19, 11) 90%
+  );
+  width: calc(var(--card-height) / 1.5);
+  height: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  border-radius: 1rem;
+
+  .detailTitle {
+    text-align: center;
+  }
+}

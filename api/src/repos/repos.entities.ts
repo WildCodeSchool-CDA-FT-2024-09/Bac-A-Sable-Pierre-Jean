@@ -10,12 +10,12 @@ import {
 import { Min, Max, IsBoolean, IsString } from "class-validator";
 import { Status } from "../status/status.entities";
 import { Lang } from "../langs/lang.entities";
-import { Field, ObjectType } from "type-graphql";
+import { Field, ID, ObjectType } from "type-graphql";
 
 @ObjectType()
 @Entity()
 export class Repo extends BaseEntity {
-  @Field()
+  @Field(() => ID)
   @PrimaryColumn()
   @IsString()
   id: string;
